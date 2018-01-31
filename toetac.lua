@@ -124,18 +124,23 @@ end
 function update()
   --reset button
   if btnp(7, 0, 30) then
-    init()        
+    music()
+    init()
   end
   if not game.winnningPhase then
     --cursor movement button
     if btnp(0, 0, 30) then 
       cursor.y = cursor.y - 1
+      sfx(1, C3, 12, 0, 9)
     elseif btnp(1, 0, 30) then
       cursor.y = cursor.y + 1
+      sfx(1, C3, 12, 0, 9)
     elseif btnp(2, 0, 30) then
       cursor.x = cursor.x - 1
+      sfx(1, C3, 12, 0, 9)
     elseif btnp(3, 0, 30) then
       cursor.x = cursor.x + 1
+      sfx(1, C3, 12, 0, 9)
     end
     --clamp cursor position
     if cursor.x < 1 then 
@@ -208,9 +213,11 @@ function actionButton()
         cursor.isGripPawn = false
         cursor.showTemp = false
         goToNextTurn()
+        sfx(0, G3, 20)
       else
         textNotif.text = "Cannot put it here!"
         textNotif.timer = textNotif.duration
+        sfx(2, G1, 12)
       end
     --logic for get pawn from the grid
     else
@@ -242,6 +249,7 @@ function goToNextTurn()
     game.winnningPhase = true
     textNotif.text = "Player "..winner.." WIN!"
     textNotif.timer = 60000
+    music(0)
   end
   --change the turn to other player
   game.turnCount = game.turnCount + 1
