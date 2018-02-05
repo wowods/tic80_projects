@@ -236,7 +236,7 @@ function actionButton()
     end
   end
   --when button B is pressed, it'll cancel last picked pawn
-  if btn(5) and cursor.isGripPawn then
+  if game.slidePhase and cursor.isGripPawn and btnp(5, 0, 30) then
     grid[cursor.prev_x][cursor.prev_y] = cursor.pawn
     cursor.isGripPawn = false
     cursor.showTemp = false
