@@ -3,22 +3,28 @@
 -- desc:   sliding puzzle with customize color
 -- script: lua
 
+-- constants used in this project
 SCENE_MENU = "menu"
 SCENE_PLAY = "play"
 COLOR_RED = "RED"
 COLOR_GREEN = "GREEN"
 COLOR_BLUE = "BLUE"
+MOVE_UP = "UP"
+MOVE_DOWN = "DOWN"
+MOVE_LEFT = "LEFT"
+MOVE_RIGHT = "RIGHT"
 
 function init()
   scene = SCENE_MENU
+  --init variables for menu
   colors = {
     { r = 25,  g = 25,  b = 25,  isChanged = true  }, -- 1
     { r = 68,  g = 36,  b = 52,  isChanged = false }, -- 2
     { r = 200, g = 75,  b = 100, isChanged = true  }, -- 3
     { r = 78,  g = 74,  b = 79,  isChanged = false }, -- 4
-    { r = 133, g = 76,  b = 48,  isChanged = false }, -- 5
+    { r = 8,   g = 8,   b = 8,   isChanged = true  }, -- 5
     { r = 52,  g = 101, b = 36,  isChanged = false }, -- 6
-    { r = 25,  g = 75,  b = 225,  isChanged = true }, -- 7
+    { r = 25,  g = 75,  b = 225, isChanged = true  }, -- 7
     { r = 117, g = 113, b = 97,  isChanged = false }, -- 8
     { r = 50,  g = 175, b = 50,  isChanged = true  }, -- 9
     { r = 210, g = 125, b = 44,  isChanged = false }, -- 10
@@ -37,6 +43,14 @@ function init()
     { color = 9, rStep = 2, gStep = 7, bStep = 2 }
   }
   cursorPos = 1
+  --init variables for playing
+  grid = {
+    { 1, 2, 3 },
+    { 4, 0, 6 },
+    { 7, 8, 9 }
+  }
+  emptyGrid = { x = 2, y = 2 }
+  isMoving = false
 end
 
 function update()
@@ -44,6 +58,14 @@ function update()
     updateMenu()
   elseif scene == SCENE_PLAY then
     updatePlay()
+  end
+end
+
+function draw()
+  if scene == SCENE_MENU then
+    drawMenu()
+  elseif scene == SCENE_PLAY then
+    drawPlay()
   end
 end
 
@@ -56,6 +78,7 @@ function updateMenu()
     cursorPos = cursorPos + 1
   end
   --changing value by pressing left and right
+  --or start the game if cursor on start label
   if cursorPos < 13 then
     if btnp(2, 0, 30) then
       mvIndex = math.floor((cursorPos-1) / 3) + 1
@@ -77,6 +100,9 @@ function updateMenu()
         changeColor(menuValues[mvIndex]["color"], colCons, 1)
       end
     end
+  elseif btnp(2, 0, 30) or btnp(3, 0, 30) then
+    generateColor()
+    scene = SCENE_PLAY
   end
   --changing color on memory
   if (anyChanges) then
@@ -87,17 +113,6 @@ function updateMenu()
       end
     end
     anyChanges = false
-  end
-end
-
-function updatePlay()
-end
-
-function draw()
-  if scene == SCENE_MENU then
-    drawMenu()
-  elseif scene == SCENE_PLAY then
-    drawPlay()
   end
 end
 
@@ -138,9 +153,6 @@ function drawMenu()
   end
 end
 
-function drawPlay()
-end
-
 --function to changing color based on input
 function changeColor(index, color, delta)
   --increase colors value
@@ -161,6 +173,11 @@ function generateColor()
   calculateColor(4, 1, 7)
   calculateColor(6, 3, 9)
   calculateColor(8, 7, 9)
+  --for background color on playing scene
+  calculateColor(5, 5, 2)
+  calculateColor(5, 5, 4)
+  calculateColor(5, 5, 6)
+  calculateColor(5, 5, 8)
   anyChanges = true
 end
 --function to calculate intermediate color
@@ -173,66 +190,55 @@ end
 --sets the palette indice i to specified rgb
 --or return the colors if no rgb values are declared.
 function pal(i,r,g,b)
-	--sanity checks
-	if i<0 then i=0 end
-	if i>15 then i=15 end
-	--returning color r,g,b of the color
-	if r==nil and g==nil and b==nil then
-		return peek(0x3fc0+(i*3)),peek(0x3fc0+(i*3)+1),peek(0x3fc0+(i*3)+2)
-	else
-		if r==nil or r<0 then r=0 end
-		if g==nil or g<0 then g=0 end
-		if b==nil or b<0 then b=0 end
-		if r>255 then r=255 end
-		if g>255 then g=255 end
-		if b>255 then b=255 end
-		poke(0x3fc0+(i*3)+2,b)
-		poke(0x3fc0+(i*3)+1,g)
-		poke(0x3fc0+(i*3),r)
-	end
+  --sanity checks
+  if i<0 then i=0 end
+  if i>15 then i=15 end
+  --returning color r,g,b of the color
+  if r==nil and g==nil and b==nil then
+    return peek(0x3fc0+(i*3)),peek(0x3fc0+(i*3)+1),peek(0x3fc0+(i*3)+2)
+  else
+    if r==nil or r<0 then r=0 end
+    if g==nil or g<0 then g=0 end
+    if b==nil or b<0 then b=0 end
+    if r>255 then r=255 end
+    if g>255 then g=255 end
+    if b>255 then b=255 end
+    poke(0x3fc0+(i*3)+2,b)
+    poke(0x3fc0+(i*3)+1,g)
+    poke(0x3fc0+(i*3),r)
+  end
 end
 
--- function rgbToHex(rgbDecimal)
---   local color = {
---     r = string.sub(rgbDecimal, 1, 3),
---     g = string.sub(rgbDecimal, 4, 6),
---     b = string.sub(rgbDecimal, 7, 9)
---   }
---   return decToHex(color.r)..decToHex(color.g)..decToHex(color.b);
--- end
+function updatePlay()
+  --control where to slide
+  if btnp(0, 0, 30) then
+    --up button
+  end
+  if btnp(1, 0, 30) then
+    --down button
+  end
+  if btnp(2, 0, 30) then
+    --left button
+  end
+  if btnp(3, 0, 30) then
+    --right button
+  end
+end
 
--- function decToHex(decimal)
---   local hex = ""
---   decimal = decimal + 0
---   while decimal > 0 do
---     local mod = math.floor(decimal % 16)
---     if mod <= 9 then
---       hex = mod..hex
---     elseif mod == 10 then
---       hex = "A"..hex
---     elseif mod == 11 then
---       hex = "B"..hex
---     elseif mod == 12 then
---       hex = "C"..hex
---     elseif mod == 13 then
---       hex = "D"..hex
---     elseif mod == 14 then
---       hex = "E"..hex
---     elseif mod == 15 then
---       hex = "F"..hex
---     end
---     decimal = math.floor(decimal / 16)
---   end
---   --must return string with length of 2
---   while (string.len(hex) < 2) do
---     hex = "0"..hex
---   end
---   return hex
--- end
+function drawPlay()
+  --draw 3x3 grid
+  for i,row in pairs(grid) do
+    for j, val in pairs(row) do
+      if val > 0 then
+        rect(((4*j)-1)*8, ((4*i)-1)*8, 32, 32, val)
+      end
+    end
+  end
+end
 
 init()
 function TIC()
-  cls(10)
+  cls(5)
   update()
   draw()
 end
