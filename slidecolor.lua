@@ -17,6 +17,17 @@ START_WIDTH = print("START", 0, 0)
 
 function init()
   scene = SCENE_MENU
+  menuMessage = {
+    x = 0,
+    y = 115,
+    width = 0,
+    text = "Menu Message",
+    prevText = "Menu Message",
+    duration = 90, --1.5s
+    timer = 0
+  }
+  menuMessage.width = print(menuMessage.text, 0, -20)
+  menuMessage.x = (240 - menuMessage.width) // 2
 
   --init variables for menu
   colors = {
@@ -45,17 +56,7 @@ function init()
     { color = 9, rStep = 2, gStep = 7, bStep = 2 }
   }
   cursorPos = 1
-  menuMessage = {
-    x = 0,
-    y = 117,
-    width = 0,
-    text = "Menu Message",
-    prevText = "Menu Message",
-    duration = 90, --2s
-    timer = 0
-  }
-  menuMessage.width = print(menuMessage.text, 0, 0)
-  menuMessage.x = (240 - menuMessage.width) // 2
+  
 
   --init variables for playing
   grid = {
@@ -64,7 +65,7 @@ function init()
     { 7, 8, 9 }
   }
   emptyGrid = { x = 2, y = 2 }
-  isMoving = false
+  isWinning = false
 end
 
 function update()
@@ -80,6 +81,16 @@ function draw()
     drawMenu()
   elseif scene == SCENE_PLAY then
     drawPlay()
+  end
+  --print menuMessage
+  if menuMessage.timer > 0 then
+    --re-calculate text width if text changed
+    if menuMessage.text ~= menuMessage.prevText then
+      menuMessage.width = print(menuMessage.text, 0, -20)
+      menuMessage.x = (240 - menuMessage.width) // 2
+    end
+    print(menuMessage.text, menuMessage.x, menuMessage.y)
+    menuMessage.timer = menuMessage.timer - 1
   end
 end
 
@@ -141,41 +152,37 @@ end
 function drawMenu()
   --draw menu options
   rect(15, 10, 30, 30, 1)
-
+  print("1", 25, 20, 5, false, 2)
   print("R : "..menuValues[1]["rStep"], 60, 10, 15)
   print("G : "..menuValues[1]["gStep"], 60, 25, 15)
   print("B : "..menuValues[1]["bStep"], 60, 40, 15)
-  rect(15, 70, 30, 30, 3)
-  print("R : "..menuValues[2]["rStep"], 60, 70, 15)
-  print("G : "..menuValues[2]["gStep"], 60, 85, 15)
-  print("B : "..menuValues[2]["bStep"], 60, 100, 15)
-
-  rect(135, 10, 30, 30, 7)
-  print("R : "..menuValues[3]["rStep"], 180, 10, 15)
-  print("G : "..menuValues[3]["gStep"], 180, 25, 15)
-  print("B : "..menuValues[3]["bStep"], 180, 40, 15)
+  rect(135, 10, 30, 30, 3)
+  print("2", 145, 20, 5, false, 2)
+  print("R : "..menuValues[2]["rStep"], 180, 10, 15)
+  print("G : "..menuValues[2]["gStep"], 180, 25, 15)
+  print("B : "..menuValues[2]["bStep"], 180, 40, 15)
+  
+  rect(15, 70, 30, 30, 7)
+  print("3", 25, 80, 5, false, 2)
+  print("R : "..menuValues[3]["rStep"], 60, 70, 15)
+  print("G : "..menuValues[3]["gStep"], 60, 85, 15)
+  print("B : "..menuValues[3]["bStep"], 60, 100, 15)  
   rect(135, 70, 30, 30, 9)
+  print("4", 145, 80, 5, false, 2)
   print("R : "..menuValues[4]["rStep"], 180, 70, 15)
   print("G : "..menuValues[4]["gStep"], 180, 85, 15)
   print("B : "..menuValues[4]["bStep"], 180, 100, 15)
 
+  --draw start menu at the bottom of screen
   print("START", (240-START_WIDTH)//2, 125, 15)
-  if menuMessage.timer > 0 then
-    --re-calculate text width if text changed
-    if menuMessage.text ~= menuMessage.prevText then
-      menuMessage.width = print(menuMessage.text, 0, 0)
-    end
-    print(menuMessage.text, menuMessage.x, menuMessage.y)
-    menuMessage.timer = menuMessage.timer - 1
-  end
 
   --draw cursor
   if cursorPos <= 3 then
     spr(1, 50, cursorPos * 15 - 6)
   elseif cursorPos <= 6 then
-    spr(1, 50, cursorPos * 15 + 9)
+    spr(1, 170, (cursorPos-3) * 15 - 6)
   elseif cursorPos <= 9 then
-    spr(1, 170, (cursorPos-6) * 15 - 6)
+    spr(1, 50, (cursorPos-3) * 15 + 9)
   elseif cursorPos <= 12 then
     spr(1, 170, (cursorPos-6) * 15 + 9)
   else
@@ -185,9 +192,11 @@ end
 
 --preparing to go to SCENE_PLAY
 function goToScenePlay()
-  generateColor()
-  randomizeGrid()
-  scene = SCENE_PLAY
+  if checkSelectedColors() then
+    generateColor()
+    randomizeGrid()
+    scene = SCENE_PLAY
+  end
 end
 
 --function to changing color based on input
@@ -202,6 +211,42 @@ function changeColor(index, color, delta)
   end
   colors[index]["isChanged"] = true
   anyChanges = true
+end
+
+--function to check if selected color in menu is valid or not
+function checkSelectedColors()
+  local color1, color3, color7, color9
+  for i,v in pairs(menuValues) do
+    if v.color == 1 then
+      color1 = v.rStep + v.gStep + v.bStep
+    elseif v.color == 3 then
+      color3 = v.rStep + v.gStep + v.bStep
+    elseif v.color == 7 then
+      color7 = v.rStep + v.gStep + v.bStep
+    elseif v.color == 9 then
+      color9 = v.rStep + v.gStep + v.bStep
+    end
+  end
+  --check if color between 1-3, 1-7, 3-9 and 7-9 is distinguishable
+  tolerance = 4
+  if math.abs(color1 - color3) < tolerance then
+    menuMessage.text = "Color 1 and 2 is to similar"
+    menuMessage.timer = menuMessage.duration
+    return false
+  elseif math.abs(color1 - color7) < tolerance then
+    menuMessage.text = "Color 1 and 3 is to similar"
+    menuMessage.timer = menuMessage.duration
+    return false
+  elseif math.abs(color3 - color9) < tolerance then
+    menuMessage.text = "Color 2 and 4 is to similar"
+    menuMessage.timer = menuMessage.duration
+    return false
+  elseif math.abs(color7 - color9) < tolerance then
+    menuMessage.text = "Color 3 and 4 is to similar"
+    menuMessage.timer = menuMessage.duration
+    return false
+  end
+  return true
 end
 
 --function to generate color based on every corner
@@ -317,25 +362,47 @@ function slideGrid(move)
     grid[emptyGrid.x][emptyGrid.y - 1] = 0
     emptyGrid.y = emptyGrid.y - 1
   end
+  if scene == SCENE_PLAY then
+    isWinning = checkStatus()
+  end
+end
+--return true if all grid values are according to it's correct position
+function checkStatus()
+  for row,v in pairs(grid) do
+    for col,val in pairs(v) do
+      correct_answer = col + ((row-1) * 3)
+      trace("[loopagain] value:"..val.." correct_answer:"..correct_answer)
+      if (correct_answer ~= 5 and val ~= 0) or val ~= correct_answer then
+        trace("[outofloop] value:"..val.." correct_answer:"..correct_answer)
+        return false
+      end
+    end
+  end
+  return true
 end
 
 function updatePlay()
-  --control where to slide
-  if btnp(0, 0, 30) then
-    --up button
-    if isValidMove(MOVE_UP) then slideGrid(MOVE_UP) end
-  end
-  if btnp(1, 0, 30) then
-    --down button
-    if isValidMove(MOVE_DOWN) then slideGrid(MOVE_DOWN) end
-  end
-  if btnp(2, 0, 30) then
-    --left button
-    if isValidMove(MOVE_LEFT) then slideGrid(MOVE_LEFT) end
-  end
-  if btnp(3, 0, 30) then
-    --right button
-    if isValidMove(MOVE_RIGHT) then slideGrid(MOVE_RIGHT) end
+  if isWinning then
+    menuMessage.text = "You WIN!!!"
+    menuMessage.timer = menuMessage.duration
+  else
+    --control where to slide
+    if btnp(0, 0, 30) then
+      --up button
+      if isValidMove(MOVE_UP) then slideGrid(MOVE_UP) end
+    end
+    if btnp(1, 0, 30) then
+      --down button
+      if isValidMove(MOVE_DOWN) then slideGrid(MOVE_DOWN) end
+    end
+    if btnp(2, 0, 30) then
+      --left button
+      if isValidMove(MOVE_LEFT) then slideGrid(MOVE_LEFT) end
+    end
+    if btnp(3, 0, 30) then
+      --right button
+      if isValidMove(MOVE_RIGHT) then slideGrid(MOVE_RIGHT) end
+    end
   end
 end
 
