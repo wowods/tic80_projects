@@ -215,38 +215,37 @@ end
 
 --function to check if selected color in menu is valid or not
 function checkSelectedColors()
-  local color1, color3, color7, color9
-  for i,v in pairs(menuValues) do
-    if v.color == 1 then
-      color1 = v.rStep + v.gStep + v.bStep
-    elseif v.color == 3 then
-      color3 = v.rStep + v.gStep + v.bStep
-    elseif v.color == 7 then
-      color7 = v.rStep + v.gStep + v.bStep
-    elseif v.color == 9 then
-      color9 = v.rStep + v.gStep + v.bStep
-    end
+  local color1 = menuValues[1]
+  local color3 = menuValues[2]
+  local color7 = menuValues[3]
+  local color9 = menuValues[4]
+  if color1.rStep == color3.rStep and
+     color1.gStep == color3.gStep and 
+     color1.bStep == color3.bStep then
+    menuMessage.text = "Color 1 and 2 can't be the same color"
+    menuMessage.timer = menuMessage.duration
+    return false
+  elseif color1.rStep == color7.rStep and
+         color1.gStep == color7.gStep and 
+         color1.bStep == color7.bStep then
+    menuMessage.text = "Color 1 and 3 can't be the same similar"
+    menuMessage.timer = menuMessage.duration
+    return false
+  elseif color3.rStep == color9.rStep and
+         color3.gStep == color9.gStep and 
+         color3.bStep == color9.bStep then
+    menuMessage.text = "Color 2 and 4 can't be the same similar"
+    menuMessage.timer = menuMessage.duration
+    return false
+  elseif color7.rStep == color9.rStep and
+         color7.gStep == color9.gStep and 
+         color7.bStep == color9.bStep then
+    menuMessage.text = "Color 3 and 4 can't be the same similar"
+    menuMessage.timer = menuMessage.duration
+    return false
+  else
+    return true
   end
-  --check if color between 1-3, 1-7, 3-9 and 7-9 is distinguishable
-  tolerance = 4
-  if math.abs(color1 - color3) < tolerance then
-    menuMessage.text = "Color 1 and 2 is to similar"
-    menuMessage.timer = menuMessage.duration
-    return false
-  elseif math.abs(color1 - color7) < tolerance then
-    menuMessage.text = "Color 1 and 3 is to similar"
-    menuMessage.timer = menuMessage.duration
-    return false
-  elseif math.abs(color3 - color9) < tolerance then
-    menuMessage.text = "Color 2 and 4 is to similar"
-    menuMessage.timer = menuMessage.duration
-    return false
-  elseif math.abs(color7 - color9) < tolerance then
-    menuMessage.text = "Color 3 and 4 is to similar"
-    menuMessage.timer = menuMessage.duration
-    return false
-  end
-  return true
 end
 
 --function to generate color based on every corner
@@ -407,12 +406,29 @@ function updatePlay()
 end
 
 function drawPlay()
+  drawBoard()
   --draw 3x3 grid
   for i,row in pairs(grid) do
     for j, val in pairs(row) do
       if val > 0 then
         rect(((4*j)-1)*8, ((4*i)-1)*8, 32, 32, val)        
       end
+    end
+  end
+end
+
+function drawBoard()
+  --draw top and bottom border
+  for i=0,4,4 do
+    for j=0,4 do
+      spr((i*16)+16+j, ((4*j)-1)*8, ((4*i)-1)*8, 5, 4)
+    end
+  end
+  --draw left and right border
+  for j=0,4,4 do
+    for i=1,3 do
+      local spr_id = j + 16 + (i*16)
+      spr(spr_id, ((4*j)-1)*8, ((4*i)-1)*8, 5, 4)
     end
   end
 end
