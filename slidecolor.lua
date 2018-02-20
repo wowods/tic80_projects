@@ -231,6 +231,18 @@ function checkSelectedColors()
     menuMessage.text = "Color 1 and 3 can't be the same similar"
     menuMessage.timer = menuMessage.duration
     return false
+  elseif color1.rStep == color9.rStep and
+         color1.gStep == color9.gStep and 
+         color1.bStep == color9.bStep then
+    menuMessage.text = "Color 1 and 4 can't be the same similar"
+    menuMessage.timer = menuMessage.duration
+    return false
+  elseif color3.rStep == color7.rStep and
+         color3.gStep == color7.gStep and 
+         color3.bStep == color7.bStep then
+    menuMessage.text = "Color 2 and 3 can't be the same similar"
+    menuMessage.timer = menuMessage.duration
+    return false
   elseif color3.rStep == color9.rStep and
          color3.gStep == color9.gStep and 
          color3.bStep == color9.bStep then
@@ -367,17 +379,18 @@ function slideGrid(move)
 end
 --return true if all grid values are according to it's correct position
 function checkStatus()
+  result = true
   for row,v in pairs(grid) do
     for col,val in pairs(v) do
       correct_answer = col + ((row-1) * 3)
-      trace("[loopagain] value:"..val.." correct_answer:"..correct_answer)
-      if (correct_answer ~= 5 and val ~= 0) or val ~= correct_answer then
-        trace("[outofloop] value:"..val.." correct_answer:"..correct_answer)
+      if correct_answer == 5 and val == 0 then
+        result = (result and true)
+      elseif val ~= correct_answer then
         return false
       end
     end
   end
-  return true
+  return result
 end
 
 function updatePlay()
@@ -402,6 +415,9 @@ function updatePlay()
       --right button
       if isValidMove(MOVE_RIGHT) then slideGrid(MOVE_RIGHT) end
     end
+    if btnp(4, 0, 30) then
+      checkStatus()
+    end
   end
 end
 
@@ -418,6 +434,8 @@ function drawPlay()
 end
 
 function drawBoard()
+  --draw star in the middle
+  spr(21, 56, 56, 5, 2, 0, 0, 2, 2)
   --draw top and bottom border
   for i=0,4,4 do
     for j=0,4 do
