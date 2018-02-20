@@ -28,6 +28,16 @@ function init()
   }
   menuMessage.width = print(menuMessage.text, 0, -20)
   menuMessage.x = (240 - menuMessage.width) // 2
+  playMessage = {
+    x = 0,
+    y = 0,
+    width = 0,
+    text = "Play Message",
+    prevText = "Play Message",
+    timer = 0
+  }
+  playMessage.width = print(playMessage.text, 0, -20)
+  playMessage.x = (240 - playMessage.width) // 2
 
   --init variables for menu
   colors = {
@@ -91,6 +101,15 @@ function draw()
     end
     print(menuMessage.text, menuMessage.x, menuMessage.y)
     menuMessage.timer = menuMessage.timer - 1
+  end
+  --print playMessage
+  if playMessage.timer > 0 then
+    --re-calculate text width if text changed
+    if playMessage.text ~= playMessage.prevText then
+      playMessage.width = print(playMessage.text, 0, -20)
+      playMessage.x = (240 - playMessage.width) // 2
+    end
+    print(playMessage.text, playMessage.x, playMessage.y)
   end
 end
 
@@ -178,15 +197,15 @@ function drawMenu()
 
   --draw cursor
   if cursorPos <= 3 then
-    spr(1, 50, cursorPos * 15 - 6)
+    spr(1, 50, cursorPos * 15 - 6, 5)
   elseif cursorPos <= 6 then
-    spr(1, 170, (cursorPos-3) * 15 - 6)
+    spr(1, 170, (cursorPos-3) * 15 - 6, 5)
   elseif cursorPos <= 9 then
-    spr(1, 50, (cursorPos-3) * 15 + 9)
+    spr(1, 50, (cursorPos-3) * 15 + 9, 5)
   elseif cursorPos <= 12 then
-    spr(1, 170, (cursorPos-6) * 15 + 9)
+    spr(1, 170, (cursorPos-6) * 15 + 9, 5)
   else
-    spr(1, (240-START_WIDTH)/2-10, 124)
+    spr(1, (240-START_WIDTH)/2-10, 124, 5)
   end
 end
 
@@ -395,8 +414,8 @@ end
 
 function updatePlay()
   if isWinning then
-    menuMessage.text = "You WIN!!!"
-    menuMessage.timer = menuMessage.duration
+    playMessage.text = "You WIN!!!"
+    playMessage.timer = 1
   else
     --control where to slide
     if btnp(0, 0, 30) then
@@ -423,11 +442,14 @@ end
 
 function drawPlay()
   drawBoard()
-  --draw 3x3 grid
+  --draw 3x3 playing grid
   for i,row in pairs(grid) do
     for j, val in pairs(row) do
       if val > 0 then
+        --drawing play grid
         rect(((4*j)-1)*8, ((4*i)-1)*8, 32, 32, val)        
+        --drawing check status grid
+        spr(23, 124+(j*24), (i*24), 5, 1, 0, 0, 2, 2)
       end
     end
   end
