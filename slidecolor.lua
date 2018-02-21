@@ -447,9 +447,7 @@ function drawPlay()
     for j, val in pairs(row) do
       if val > 0 then
         --drawing play grid
-        rect(((4*j)-1)*8, ((4*i)-1)*8, 32, 32, val)        
-        --drawing check status grid
-        spr(23, 124+(j*24), (i*24), 5, 1, 0, 0, 2, 2)
+        rect(((4*j)-1)*8, ((4*i)-1)*8, 32, 32, val)
       end
     end
   end
@@ -469,6 +467,31 @@ function drawBoard()
     for i=1,3 do
       local spr_id = j + 16 + (i*16)
       spr(spr_id, ((4*j)-1)*8, ((4*i)-1)*8, 5, 4)
+    end
+  end
+  --draw check status grid
+  --drawing check status grid
+  for i=1,3 do
+    for j=1,3 do
+      current_value = grid[i][j]
+      correct_value = (i==2 and j==2) and 0 or (j + ((i-1) * 3))
+      trace('current: '..current_value..' - correct:'..correct_value)
+      -- if i==2 and j==2 then
+      --   correct_value = 0
+      -- else
+      --   correct_value = j + ((i-1) * 3)
+      -- end
+      --draw the sprite either its correct or false
+      posx = 124 + (j*24)
+      posy = i*24
+      sprid = current_value == correct_value and 25 or 23
+      trace('x: '..posx..' y:'..posy..' - sprid:'..sprid)
+      spr(sprid, posx, posy, 5, 1, 0, 0, 2, 2)
+      -- if current_value == correct_value then
+      --   spr(25, posx, posy, 5, 1, 0, 0, 2, 2)
+      -- else
+      --   spr(23, posx, posy, 5, 1, 0, 0, 2, 2)
+      -- end
     end
   end
 end
