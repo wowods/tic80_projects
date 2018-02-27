@@ -28,17 +28,32 @@ function init()
   }
   menuMessage.width = print(menuMessage.text, 0, -20)
   menuMessage.x = (240 - menuMessage.width) // 2
-  playMessage = {
-    x = 0,
-    y = 0,
-    width = 0,
-    text = "Play Message",
-    prevText = "Play Message",
-    timer = 0
+  winningMessage = {
+    win = {
+      x = 0,
+      y = 0,
+      width = 0,
+      text = "You WIN!"
+    },
+    restart = {
+      x = 0,
+      y = 18,
+      width = 0,
+      text = "[Z] to Restart"
+    },
+    score = {
+      x = 0,
+      y = 28,
+      width = 0,
+      text = "Score :"
+    },
+    isShown = false
   }
-  playMessage.width = print(playMessage.text, 0, -20)
-  playMessage.x = (240 - playMessage.width) // 2
-
+  winningMessage.win.width = print(winningMessage.win.text, 0, -20)
+  winningMessage.win.x = (240 - winningMessage.win.width) // 2
+  winningMessage.restart.width = print(winningMessage.restart.text, 0, -20)
+  winningMessage.restart.x = 180 - (winningMessage.restart.width//2)
+  
   --init variables for menu
   colors = {
     { r = 55,  g = 55,  b = 55,  isChanged = true  }, -- 1
@@ -69,6 +84,8 @@ function init()
   
 
   --init variables for playing
+  playerTurn = 0
+  perfectTurn = 0
   grid = {
     { 1, 2, 3 },
     { 4, 0, 6 },
@@ -102,14 +119,12 @@ function draw()
     print(menuMessage.text, menuMessage.x, menuMessage.y)
     menuMessage.timer = menuMessage.timer - 1
   end
-  --print playMessage
-  if playMessage.timer > 0 then
-    --re-calculate text width if text changed
-    if playMessage.text ~= playMessage.prevText then
-      playMessage.width = print(playMessage.text, 0, -20)
-      playMessage.x = (240 - playMessage.width) // 2
-    end
-    print(playMessage.text, playMessage.x, playMessage.y)
+  --print winningMessage
+  if winningMessage.isShown then
+    --show winning text
+    print(winningMessage.win.text, winningMessage.win.x, winningMessage.win.y)
+    print(winningMessage.restart.text, winningMessage.restart.x, winningMessage.restart.y)
+    print(winningMessage.score.text, winningMessage.score.x, winningMessage.score.y)
   end
 end
 
@@ -327,6 +342,7 @@ end
 --function to randomize the grid
 function randomizeGrid()
   local randomStep = math.random(20, 50)
+  perfectTurn = randomStep
   local lastStep
   local currentStep
   local i = 0
@@ -414,29 +430,58 @@ end
 
 function updatePlay()
   if isWinning then
-    playMessage.text = "You WIN!!!"
-    playMessage.timer = 1
+    playerWin()
   else
     --control where to slide
     if btnp(0, 0, 30) then
       --up button
-      if isValidMove(MOVE_UP) then slideGrid(MOVE_UP) end
+      if isValidMove(MOVE_UP) then 
+        slideGrid(MOVE_UP)
+        playerTurn = playerTurn + 1
+      end
     end
     if btnp(1, 0, 30) then
       --down button
-      if isValidMove(MOVE_DOWN) then slideGrid(MOVE_DOWN) end
+      if isValidMove(MOVE_DOWN) then 
+        slideGrid(MOVE_DOWN)
+        playerTurn = playerTurn + 1 
+      end
     end
     if btnp(2, 0, 30) then
       --left button
-      if isValidMove(MOVE_LEFT) then slideGrid(MOVE_LEFT) end
+      if isValidMove(MOVE_LEFT) then 
+        slideGrid(MOVE_LEFT)
+        playerTurn = playerTurn + 1
+      end
     end
     if btnp(3, 0, 30) then
       --right button
-      if isValidMove(MOVE_RIGHT) then slideGrid(MOVE_RIGHT) end
+      if isValidMove(MOVE_RIGHT) then 
+        slideGrid(MOVE_RIGHT)
+        playerTurn = playerTurn + 1
+      end
     end
-    if btnp(4, 0, 30) then
-      checkStatus()
+  end
+end
+
+function playerWin()
+  --set some text to draw
+  if not winningMessage.isShown then
+    --calculate and shown player score
+    if playerTurn < perfectTurn then
+      winningMessage.score.text = "Score: "..200
+    else
+      percDiff = (playerTurn - perfectTurn) // perfectTurn
+      playerScore = 150-(perfectTurn*0.1*((math.ceil(percDiff)*10) - 1))
+      winningMessage.score.text = "Score: "..playerScore
     end
+    winningMessage.score.width = print(winningMessage.score.text, 0 , -20)
+    winningMessage.score.x = 180 - (winningMessage.score.width//2)
+    winningMessage.isShown = true
+  end
+  --adding button to restart game
+  if (btnp(4, 0, 30)) then
+    init()
   end
 end
 
@@ -470,30 +515,20 @@ function drawBoard()
     end
   end
   --draw check status grid
-  --drawing check status grid
   for i=1,3 do
     for j=1,3 do
       current_value = grid[i][j]
       correct_value = (i==2 and j==2) and 0 or (j + ((i-1) * 3))
-      trace('current: '..current_value..' - correct:'..correct_value)
-      -- if i==2 and j==2 then
-      --   correct_value = 0
-      -- else
-      --   correct_value = j + ((i-1) * 3)
-      -- end
       --draw the sprite either its correct or false
       posx = 124 + (j*24)
-      posy = i*24
+      posy = 18 + (i*24)
       sprid = current_value == correct_value and 25 or 23
-      trace('x: '..posx..' y:'..posy..' - sprid:'..sprid)
       spr(sprid, posx, posy, 5, 1, 0, 0, 2, 2)
-      -- if current_value == correct_value then
-      --   spr(25, posx, posy, 5, 1, 0, 0, 2, 2)
-      -- else
-      --   spr(23, posx, posy, 5, 1, 0, 0, 2, 2)
-      -- end
     end
   end
+  --draw player turn
+  print("Turn: "..playerTurn, 148, 116)
+  
 end
 
 init()
